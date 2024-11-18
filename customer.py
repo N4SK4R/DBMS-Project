@@ -29,6 +29,33 @@ def open_dashboard(username):
     cursor.execute("SELECT vehicle_ID, brand, price_per_day FROM cars WHERE in_maintenance = 0 AND reserved = 0")
     available_cars = cursor.fetchall()
 
+    def discount():
+        
+        car_selection = car_dropdown.get()
+        car_id = car_selection.split(" - ")[0]
+        start_date = datetime.strptime(start_calendar.get(), "%m/%d/%y")
+        end_date = datetime.strptime(end_calendar.get(), "%m/%d/%y")
+        days = (end_date - start_date).days
+        
+        cursor.execute("SELECT customer_ID FROM users WHERE username = ?", (username,))
+        customer_id=cursor.fetchone()
+
+        price_per_day = car_prices[car_id] if car_id in car_prices else 0
+        total_price = days * price_per_day
+
+        cursor.execute("SELECT discount_code FROM discounts WHERE customer_ID = ?", (customer_id[0],))
+        discount_row = cursor.fetchone()
+
+        if not discount_row:
+            messagebox.showerror("Error"," No discount available.")
+            return
+
+        discount_code = discount_row[0]
+        discounted_price = total_price - (discount_code * total_price)/100
+
+        total_price_label.config(text=f"Total Price: ₹{discounted_price}")
+
+    
     def update_total_price():
         try:
             car_selection = car_dropdown.get()
@@ -88,8 +115,11 @@ def open_dashboard(username):
     calculate_button = tk.Button(root, text="Calculate Total Price", command=update_total_price)
     calculate_button.place(x=5, y=250)
     
+    discount_button = tk.Button(root, text="Discount", command=discount)
+    discount_button.place(x=140, y=250)
+    
     reserve_button = tk.Button(root, text="Reserve", command=reserve_car)
-    reserve_button.place(x=140, y=250)
+    reserve_button.place(x=200, y=250)
 
     root.mainloop()
     conn.close()
