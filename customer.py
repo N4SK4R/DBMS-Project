@@ -47,7 +47,7 @@ def open_dashboard(username):
         discount_row = cursor.fetchone()
 
         if not discount_row:
-            messagebox.showerror("Error"," No discount available.")
+            messagebox.showerror("Error"," No discount available")
             return
 
         discount_code = discount_row[0]
@@ -76,13 +76,16 @@ def open_dashboard(username):
             start_date = start_calendar.get()
             end_date = end_calendar.get()
             
+            start_date_formatted = datetime.strptime(start_date, "%m/%d/%y").strftime("%Y-%m-%d")
+            end_date_formatted = datetime.strptime(end_date, "%m/%d/%y").strftime("%Y-%m-%d")
+            
             if car_id != "" and start_date != "" and end_date != "":
                 cursor.execute("SELECT customer_ID FROM users WHERE username = ?", (username,))
                 customer_id=cursor.fetchone()
                 cursor.execute('''
                 INSERT INTO reservations (customer_ID, car_id, start_date, end_date)
                 VALUES (?, ?, ?, ?)
-                ''', (customer_id[0], car_id, start_date, end_date))
+                ''', (customer_id[0], car_id, start_date_formatted, end_date_formatted))
 
                 conn.commit()
                 messagebox.showinfo("Reservation", "Reservation successfully added!")
